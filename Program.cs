@@ -6,32 +6,36 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        if (args[0] == "server")
+        if (args.Length != 0)
         {
-            var server = new CustomTcpServer(5555);
-            await server.StartAsync(default);
-        }
-        if (args[0] == "client")
-        {
-            var client = new CustomTcpClient();
-            await client.SendAsync("localhost", 5555, "Hello!", default);
-        }
-        if (args[0] == "http")
-        {
-            // working specifically with the Http server
-            CancellationTokenSource token = new CancellationTokenSource();
+            Console.WriteLine(string.Join(" ", args));
 
-            Console.CancelKeyPress += (_, e) =>
+            if (args[0] == "server")
             {
-                e.Cancel = true;
-                token.Cancel();
-            };
+                var server = new CustomTcpServer(5555);
+                await server.StartAsync(default);
+            }
+            if (args[0] == "client")
+            {
+                var client = new CustomTcpClient();
+                await client.SendAsync("localhost", 5555, "Hello!", default);
+            }
+            if (args[0] == "http")
+            {
+                // working specifically with the Http server
+                CancellationTokenSource token = new CancellationTokenSource();
 
-            string wwwroot = Path.Combine(AppContext.BaseDirectory, "wwwroot");
+                Console.CancelKeyPress += (_, e) =>
+                {
+                    e.Cancel = true;
+                    token.Cancel();
+                };
 
-            Directory.CreateDirectory(wwwroot);
+                string wwwroot = Path.Combine(AppContext.BaseDirectory, "wwwroot");
 
-            await File.WriteAllTextAsync(Path.Combine(wwwroot, "index.html"), """
+                Directory.CreateDirectory(wwwroot);
+
+                await File.WriteAllTextAsync(Path.Combine(wwwroot, "index.html"), """
             <!DOCTYPE html>
             <html>
             <head>
@@ -45,33 +49,36 @@ class Program
             </body>
             """, Encoding.UTF8);
 
-            await File.WriteAllTextAsync(Path.Combine(wwwroot, "styles.css"), """
+                await File.WriteAllTextAsync(Path.Combine(wwwroot, "styles.css"), """
             * {
                 box-sizing: border-box;
                 margin: 0;
             }
             """, Encoding.UTF8);
 
-            await File.WriteAllTextAsync(Path.Combine(wwwroot, "main.js"), """
+                await File.WriteAllTextAsync(Path.Combine(wwwroot, "main.js"), """
             console.log("Hello, world");
             """, Encoding.UTF8);
 
-            await File.WriteAllTextAsync(Path.Combine(wwwroot, "data.json"), """
+                await File.WriteAllTextAsync(Path.Combine(wwwroot, "data.json"), """
             {
                 "message": "hello, world"
             }
             """, Encoding.UTF8);
 
-            var server = new MiniHttpServer(8080, wwwroot);
-            await server.StartAsync(token.Token);
-        }
-        if (args.Length != 0)
-        {
-            Console.WriteLine(string.Join(" ", args));
+                var server = new MiniHttpServer(8080, wwwroot);
+                await server.StartAsync(token.Token);
+            }
+            if (args[0] == "help")
+            {
+                Console.WriteLine("dotnet run 'server' spin up a simple TCP server");
+                Console.WriteLine("dotnet run 'client' spin up a simple TCP listener");
+                Console.WriteLine("dotnet run 'http' spin up a minimalistic webserver with static file support");
+            }
         }
         else
         {
-            // this is our program's entrypoint if no arguments are given to the commandline
+            Console.WriteLine("dotnet run 'help' display helpful commands");
         }
     }
 }
